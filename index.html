@@ -1,568 +1,384 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SaaS Dashboard - Registro de Usuarios</title>
-  
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legrand — Joyería de Alta Distinción</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --gold:#B89A5A;--gold-light:#D4B878;--cream:#FAF7F2;
+  --dark:#1A1410;--charcoal:#2E2820;--warm-gray:#7A7166;
+  --border:rgba(184,154,90,0.25);
+  --transition-smooth: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Jost',sans-serif;
+  background: radial-gradient(circle at 50% 0%, #261f19 0%, var(--dark) 70%);
+  color:var(--cream);
+  overflow-x:hidden;
+  cursor:none; /* Ocultamos el cursor por defecto en desktop */
+}
 
-  <style>
-    /* ==========================================================================
-       1. VARIABLES Y CONFIGURACIÓN BASE
-       ========================================================================== */
-    :root {
-      --bg-app: #09090b;
-      --bg-card: #141416;
-      --border-color: #27272a;
-      --text-main: #f4f4f5;
-      --text-muted: #a1a1aa;
-      --accent: #3b82f6;
-      --accent-hover: #2563eb;
-      --accent-light: rgba(59, 130, 246, 0.1);
-      --success: #10b981;
-      --radius: 12px;
-      --font-sans: 'Inter', sans-serif;
-      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    }
+/* ==========================================================================
+   CURSOR PREMIUM (Efecto Magnético e Inercia)
+   ========================================================================== */
+.cursor-dot {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  background: var(--gold-light);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s var(--transition-smooth), transform 0.3s var(--transition-smooth);
+}
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+.cursor-ring {
+  position: fixed;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(184, 154, 90, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  /* La transición en JS maneja el movimiento fluido, CSS maneja los cambios de escala y color */
+  transition: width 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
+              height 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
+              background-color 0.35s cubic-bezier(0.25, 1, 0.5, 1), 
+              border-color 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+}
 
-    body {
-      background-color: var(--bg-app);
-      color: var(--text-main);
-      font-family: var(--font-sans);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      /* Ocultamos el cursor por defecto en pantallas grandes para usar el personalizado */
-      cursor: none; 
-      overflow-x: hidden;
-    }
+/* Estado al hacer Hover sobre elementos interactivos */
+body.cursor-hover .cursor-dot {
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+}
 
-    /* Evita que los botones e inputs muestren el puntero de Windows */
-    input, button, select, textarea, a, th, td {
-      cursor: none !important;
-    }
+body.cursor-hover .cursor-ring {
+  width: 50px;
+  height: 50px;
+  border-color: var(--gold-light);
+  background-color: rgba(184, 154, 90, 0.08);
+}
 
-    /* ==========================================================================
-       ESTILOS DEL CURSOR CUSTOM
-       ========================================================================== */
-    .custom-cursor {
-      position: fixed;
-      width: 8px;
-      height: 8px;
-      background-color: var(--accent);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 9999;
-      transform: translate(-50%, -50%);
-      transition: transform 0.1s ease;
-    }
+/* Ocular cursores en pantallas táctiles */
+@media (max-width: 1024px) {
+  body { cursor: auto; }
+  input, button, select, textarea, a { cursor: auto !important; }
+  .cursor-dot, .cursor-ring { display: none !important; }
+}
 
-    .custom-cursor-ring {
-      position: fixed;
-      width: 32px;
-      height: 32px;
-      border: 1px solid rgba(59, 130, 246, 0.4);
-      border-radius: 50%;
-      pointer-events: none;
-      z-index: 9998;
-      transform: translate(-50%, -50%);
-      transition: transform 0.15s cubic-bezier(0.25, 1, 0.5, 1), width 0.3s, height 0.3s, background-color 0.3s;
-    }
+/* Forzamos que todo elemento interactivo herede la desaparición del puntero */
+input, button, select, textarea, a, th, td, label {
+  cursor: none !important;
+}
 
-    /* Efecto hover global para elementos interactivos */
-    body.cursor-hover .custom-cursor-ring {
-      width: 44px;
-      height: 44px;
-      background-color: rgba(59, 130, 246, 0.08);
-      border-color: var(--accent);
-    }
+/* ==========================================================================
+   RESTO DE COMPONENTES DE LA LANDING
+   ========================================================================== */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:1.4rem 4rem;background:rgba(26,20,16,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:1.5rem;letter-spacing:.35em;color:var(--gold-light);text-transform:uppercase;text-decoration:none;}
+.nav-links{display:flex;gap:2.5rem;list-style:none;}
+.nav-links a{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--cream);text-decoration:none;opacity:.75;transition:opacity .3s,color .3s;}
+.nav-links a:hover{opacity:1;color:var(--gold-light);}
+.nav-right{display:flex;align-items:center;gap:1.25rem;}
+.cart-btn{background:none;border:1px solid var(--border);color:var(--cream);padding:.55rem 1.2rem;font-family:'Jost',sans-serif;font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;display:flex;align-items:center;gap:.5rem;transition:border-color .3s,color .3s;}
+.cart-btn:hover{border-color:var(--gold);color:var(--gold);}
+.cart-count{background:var(--gold);color:var(--dark);border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:400;}
+.nav-cta{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);border:1px solid var(--border);padding:.65rem 1.5rem;text-decoration:none;transition:background .3s,color .3s;}
+.nav-cta:hover{background:var(--gold);color:var(--dark);}
 
-    /* Ocultar cursores en dispositivos táctiles donde no hay mouse */
-    @media (max-width: 1024px) {
-      body { cursor: auto; }
-      input, button, select, textarea, a { cursor: auto !important; }
-      .custom-cursor, .custom-cursor-ring { display: none !important; }
-    }
+.hero{position:relative;height:100vh;display:flex;align-items:center;overflow:hidden;}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;filter:brightness(.32);}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(26,20,16,.9) 40%,rgba(26,20,16,.1) 100%);}
+.hero-content{position:relative;z-index:2;padding:0 4rem;max-width:680px;}
+.hero-eyebrow{font-size:.65rem;letter-spacing:.4em;text-transform:uppercase;color:var(--gold);margin-bottom:1.75rem;animation:fu 1.2s ease .1s both;}
+.hero-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(3.5rem,7vw,6.5rem);line-height:.95;color:var(--cream);margin-bottom:1.25rem;animation:fu 1.2s ease .25s both;}
+.hero-title em{font-style:italic;color:var(--gold-light);}
+.hero-sub{font-size:.78rem;line-height:2;color:var(--warm-gray);font-weight:200;margin-bottom:3rem;max-width:44ch;animation:fu 1.2s ease .4s both;}
+.hero-actions{display:flex;gap:1.25rem;flex-wrap:wrap;animation:fu 1.2s ease .55s both;}
+@keyframes fu{from{opacity:0;transform:translateY(28px);}to{opacity:1;transform:translateY(0);}}
+.btn-primary{font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;background:var(--gold);color:var(--dark);padding:1rem 2.5rem;border:none;font-family:'Jost',sans-serif;transition:background .3s,transform .2s;display:inline-block;text-decoration:none;}
+.btn-primary:hover{background:var(--gold-light);transform:translateY(-2px);}
+.btn-ghost{font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:var(--cream);border:1px solid var(--border);padding:1rem 2.5rem;background:none;font-family:'Jost',sans-serif;transition:border-color .3s,color .3s,transform .2s;display:inline-block;text-decoration:none;}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold);transform:translateY(-2px);}
 
-    /* ==========================================================================
-       2. ESTRUCTURA Y DISEÑO (LAYOUT)
-       ========================================================================== */
-    .app-container {
-      width: 100%;
-      max-width: 1200px;
-      padding: 2.5rem 1.5rem;
-    }
+.hero-scroll{position:absolute;bottom:3rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.75rem;animation:fu 1.2s ease .9s both;}
+.scroll-line{width:1px;height:50px;background:linear-gradient(to bottom,var(--gold),transparent);animation:sp 2s ease infinite;}
+@keyframes sp{0%,100%{opacity:.4;height:50px;}50%{opacity:1;height:70px;}}
+.scroll-text{font-size:.55rem;letter-spacing:.35em;text-transform:uppercase;color:var(--warm-gray);}
 
-    .app-header {
-      margin-bottom: 2.5rem;
-    }
+.section-cita{padding:7rem 4rem;border-top:1px solid var(--border);}
+.section-label{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);margin-bottom:1rem;}
+.section-title{font-family:'Cormorant Garamond',serif;font-weight:300;font-size:clamp(2.5rem,5vw,3.8rem);line-height:1.05;color:var(--cream);}
+.section-title em{font-style:italic;color:var(--gold-light);}
+.section-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:4rem;flex-wrap:wrap;gap:1rem;}
 
-    .app-header h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      margin-bottom: 0.5rem;
-    }
+.cita-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:6rem;margin-top:4rem;align-items:start;}
+.cita-img{width:100%;height:220px;object-fit:cover;margin-bottom:2rem;opacity:.75;border: 1px solid var(--border);}
+.cita-info-text{font-size:.78rem;line-height:2;color:var(--warm-gray);font-weight:200;margin-bottom:2rem;}
+.cita-detail{display:flex;align-items:flex-start;gap:1rem;margin-bottom:1.5rem;}
+.cita-icon{width:36px;height:36px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:.9rem;flex-shrink:0;}
+.cita-detail strong{display:block;font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);margin-bottom:.3rem;font-weight:400;}
+.cita-detail span{font-size:.76rem;color:var(--warm-gray);font-weight:200;}
 
-    .app-header p {
-      color: var(--text-muted);
-      font-size: 0.95rem;
-    }
+.form-group{margin-bottom:1.5rem;}
+.form-group label{display:block;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:.5rem;}
+.form-group input,.form-group select{width:100%;background:rgba(255,255,255,0.02);border:1px solid var(--border);color:var(--cream);padding:.95rem 1.2rem;font-family:'Jost',sans-serif;font-size:.78rem;font-weight:200;outline:none;transition:var(--transition-smooth);-webkit-appearance:none;appearance:none;}
+.form-group select{background:var(--charcoal);}
+.form-group input::placeholder{color:var(--warm-gray);}
+.form-group input:focus,.form-group select:focus{border-color:var(--gold-light);background:rgba(184,154,90,0.04);box-shadow: 0 0 10px rgba(184,154,90,0.1);}
 
-    .app-content {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 2rem;
-    }
+.form-wa-btn{width:100%;background:none;border:1px solid var(--gold);color:var(--gold-light);padding:1.1rem;font-family:'Jost',sans-serif;font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;transition:var(--transition-smooth);margin-top:1rem;font-weight: 500;}
+.form-wa-btn:hover{background:var(--gold);color:var(--dark);border-color:var(--gold);transform: translateY(-2px);}
+.form-success{display:none;text-align:center;padding:3rem 2rem;border:1px solid var(--border);background: rgba(184,154,90,0.02);}
+.form-success.visible{display:block;}
+.form-success .fs-icon{font-size:2.5rem;color:var(--gold);margin-bottom:1rem;}
+.form-success h4{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;margin-bottom:.75rem;}
+.form-success p{font-size:.75rem;color:var(--warm-gray);font-weight:200;line-height:1.8;}
 
-    @media (min-width: 768px) {
-      .app-content {
-        grid-template-columns: 380px 1fr;
-        align-items: start;
-      }
-    }
-
-    /* ==========================================================================
-       3. COMPONENTES: CARDS (CONTENEDORES)
-       ========================================================================== */
-    .card {
-      background-color: var(--bg-card);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      padding: 1.75rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    }
-
-    .card h2 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      margin-bottom: 0.25rem;
-    }
-
-    .card-subtitle {
-      color: var(--text-muted);
-      font-size: 0.87rem;
-      margin-bottom: 1.5rem;
-    }
-
-    /* ==========================================================================
-       4. COMPONENTES: FORMULARIO
-       ========================================================================== */
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
-
-    .input-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .input-group label {
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: var(--text-main);
-    }
-
-    .input-group input {
-      background-color: #09090b;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      color: var(--text-main);
-      padding: 0.75rem 1rem;
-      font-family: inherit;
-      font-size: 0.9rem;
-      transition: var(--transition);
-    }
-
-    .input-group input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-light);
-    }
-
-    .input-group input::placeholder {
-      color: #52525b;
-    }
-
-    button[type="submit"] {
-      background-color: var(--accent);
-      color: #ffffff;
-      border: none;
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      font-family: inherit;
-      font-size: 0.9rem;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      transition: var(--transition);
-      margin-top: 0.5rem;
-    }
-
-    button[type="submit"]:hover {
-      background-color: var(--accent-hover);
-    }
-
-    button[type="submit"]:disabled {
-      background-color: var(--border-color);
-      color: var(--text-muted);
-    }
-
-    .icon {
-      width: 18px;
-      height: 18px;
-    }
-
-    /* ==========================================================================
-       5. COMPONENTES: TABLA Y BADGES
-       ========================================================================== */
-    .table-card {
-      padding: 0;
-      overflow: hidden;
-    }
-
-    .table-header {
-      padding: 1.5rem 1.75rem;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .badge {
-      background-color: #1e1b4b;
-      color: #6366f1;
-      font-size: 0.75rem;
-      font-weight: 600;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      border: 1px solid rgba(99, 102, 241, 0.2);
-    }
-
-    .table-responsive {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 0.9rem;
-    }
-
-    th {
-      background-color: rgba(255, 255, 255, 0.02);
-      color: var(--text-muted);
-      font-weight: 500;
-      padding: 1rem 1.75rem;
-      border-bottom: 1px solid var(--border-color);
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.05em;
-    }
-
-    td {
-      padding: 1rem 1.75rem;
-      border-bottom: 1px solid var(--border-color);
-      color: var(--text-main);
-    }
-
-    tr:last-child td {
-      border-bottom: none;
-    }
-
-    tr:hover td {
-      background-color: rgba(255, 255, 255, 0.01);
-    }
-
-    td:first-child, th:first-child {
-      color: var(--text-muted);
-      font-family: monospace;
-    }
-
-    /* ==========================================================================
-       6. ESTADOS DE CARGA (LOADING)
-       ========================================================================== */
-    .loading-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 3rem;
-      gap: 1rem;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .spinner {
-      width: 24px;
-      height: 24px;
-      border: 2.5px solid var(--border-color);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-  </style>
+footer{padding:4rem;display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:4rem;border-top:1px solid var(--border);background: rgba(0,0,0,0.2);}
+.footer-logo{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:300;letter-spacing:.3em;color:var(--gold-light);text-transform:uppercase;margin-bottom:1.25rem;}
+.footer-tagline{font-size:.7rem;line-height:1.9;color:var(--warm-gray);font-weight:200;max-width:28ch;margin-bottom:2rem;}
+.footer-col-title{font-size:.6rem;letter-spacing:.35em;text-transform:uppercase;color:var(--gold);margin-bottom:1.75rem;}
+.footer-links{list-style:none;}
+.footer-links li{margin-bottom:.85rem;}
+.footer-links a{font-size:.75rem;color:var(--warm-gray);text-decoration:none;font-weight:200;transition:color .3s;letter-spacing:.05em;}
+.footer-links a:hover{color:var(--gold-light);}
+.footer-bottom{padding:1.5rem 4rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background: #110d0a;}
+.footer-copy{font-size:.6rem;color:var(--warm-gray);letter-spacing:.15em;font-weight:200;}
+</style>
 </head>
 <body>
 
-  <div class="custom-cursor"></div>
-  <div class="custom-cursor-ring"></div>
+<div class="cursor-dot"></div>
+<div class="cursor-ring"></div>
 
-  <div class="app-container">
-    <header class="app-header">
-      <h1>Panel de Control</h1>
-      <p>Gestiona los usuarios de la plataforma en tiempo real</p>
-    </header>
-
-    <main class="app-content">
-      <section class="card-section">
-        <div class="card">
-          <h2>Nuevo Usuario</h2>
-          <p class="card-subtitle">Introduce las credenciales para dar de alta en el sistema.</p>
-          
-          <form id="registroForm">
-            <div class="input-group">
-              <label for="nombre">Nombre completo</label>
-              <input type="text" id="nombre" placeholder="Ej. Juan Pérez" required />
-            </div>
-            
-            <div class="input-group">
-              <label for="email">Correo electrónico</label>
-              <input type="email" id="email" placeholder="ejemplo@dominio.com" required />
-            </div>
-            
-            <button type="submit" id="btnSubmit">
-              <span>Agregar Usuario</span>
-              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
-            </button>
-          </form>
-        </div>
-      </section>
-
-      <section class="table-section">
-        <div class="card table-card">
-          <div class="table-header">
-            <h2>Usuarios Registrados</h2>
-            <span class="badge" id="userCount">0 usuarios</span>
-          </div>
-          
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Nombre</th>
-                  <th>Email</th>
-                </tr>
-              </thead>
-              <tbody id="usuariosTabla">
-                </tbody>
-            </table>
-          </div>
-          
-          <div id="loadingState" class="loading-state hidden">
-            <div class="spinner"></div>
-            <p>Sincronizando con Supabase...</p>
-          </div>
-        </div>
-      </section>
-    </main>
+<nav>
+  <a href="#" class="nav-logo">Legrand</a>
+  <ul class="nav-links">
+    <li><a href="#">Colecciones</a></li>
+    <li><a href="#">Alta Joyería</a></li>
+    <li><a href="#">La Maison</a></li>
+    <li><a href="#contacto">Citas</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="cart-btn">
+      <span>Bolsa</span>
+      <div class="cart-count">0</div>
+    </button>
+    <a href="#contacto" class="nav-cta">Reservar Cita</a>
   </div>
+</nav>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<section class="hero">
+  <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1800&q=80" alt="Alta Joyería" class="hero-img">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">Ediciones Limitadas — Piezas de Autor</p>
+    <h1 class="hero-title">Estilo que trasciende el <em>tiempo</em>.</h1>
+    <p class="hero-sub">Colecciones exclusivas forjadas con metales nobles y gemas seleccionadas a mano bajo los estándares más estrictos de la alta distinción.</p>
+    <div class="hero-actions">
+      <a href="#" class="btn-primary">Ver Catálogo</a>
+      <a href="#contacto" class="btn-ghost">Solicitar Asesoría</a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    <span class="scroll-text">Deslizar</span>
+  </div>
+</section>
 
-  <script>
-    // ==========================================================================
-    // CONFIGURACIÓN DE SUPABASE
-    // ==========================================================================
-    const SUPABASE_URL = 'https://amlbipkwzmpckpmzkpfz.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtbGJpcGt3em1wY2twbXprcGZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMzQ4OTYsImV4cCI6MjA5NDcxMDg5Nn0._3CTbgW6XiISckWMPzyPXJFczwXGO8KtABhKx_RH5b0';
-    
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // ELEMENTOS DEL DOM
-    const registroForm = document.getElementById('registroForm');
-    const usuariosTabla = document.getElementById('usuariosTabla');
-    const userCountBadge = document.getElementById('userCount');
-    const loadingState = document.getElementById('loadingState');
-    const btnSubmit = document.getElementById('btnSubmit');
-
-    const cursorDot = document.querySelector('.custom-cursor');
-    const cursorRing = document.querySelector('.custom-cursor-ring');
-
-    // ==========================================================================
-    // LÓGICA PRINCIPAL: OBTENER Y PINTAR USUARIOS
-    // ==========================================================================
-    async function obtenerUsuarios() {
-      mostrarLoading(true);
+<section class="section-cita" id="contacto">
+  <div class="section-label">Private Concierge</div>
+  <div class="section-header">
+    <h2 class="section-title">Planificá tu <em>Visita</em></h2>
+  </div>
+  
+  <div class="cita-grid">
+    <div>
+      <img src="https://images.unsplash.com/photo-1573408301185-9146fe634ad0?auto=format&fit=crop&w=800&q=80" alt="Atención personalizada" class="cita-img">
+      <p class="cita-info-text">Nuestros salones privados ofrecen un entorno íntimo donde recibirás asesoría experta para la elección o personalización de tus piezas de alta joyería.</p>
       
-      try {
-        const { data: usuarios, error } = await supabaseClient
-          .from('usuarios')
-          .select('*')
-          .order('id', { ascending: false });
+      <div class="cita-detail">
+        <div class="cita-icon">📍</div>
+        <div>
+          <strong>Dirección Central</strong>
+          <span>Av. Alvear 1850, Recoleta, Buenos Aires</span>
+        </div>
+      </div>
+      <div class="cita-detail">
+        <div class="cita-icon">✉️</div>
+        <div>
+          <strong>Consultas Generales</strong>
+          <span>concierge@legrandjoyas.com</span>
+        </div>
+      </div>
+    </div>
 
-        if (error) throw error;
-
-        usuariosTabla.innerHTML = '';
-        userCountBadge.textContent = `${usuarios.length} usuario${usuarios.length === 1 ? '' : 's'}`;
-
-        if (usuarios.length === 0) {
-          usuariosTabla.innerHTML = `
-            <tr>
-              <td colspan="3" style="text-align: center; color: var(--text-muted); padding: 3rem;">
-                No hay usuarios registrados todavía.
-              </td>
-            </tr>
-          `;
-          return;
-        }
-
-        usuarios.forEach(usuario => {
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>#${usuario.id}</td>
-            <td style="font-weight: 500;">${escapeHTML(usuario.nombre)}</td>
-            <td style="color: var(--text-muted);">${escapeHTML(usuario.email)}</td>
-          `;
-          usuariosTabla.appendChild(row);
-        });
-
-      } catch (error) {
-        console.error('Error al obtener usuarios:', error.message);
-      } finally {
-        mostrarLoading(false);
-      }
-    }
-
-    // ==========================================================================
-    // EVENTO: GUARDAR NUEVO USUARIO
-    // ==========================================================================
-    registroForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      btnSubmit.disabled = true;
-      const originalBtnContent = btnSubmit.innerHTML;
-      btnSubmit.innerHTML = '<span>Guardando...</span> <div class="spinner" style="width:14px; height:14px; border-width:2px;"></div>';
-
-      const nombre = document.getElementById('nombre').value.trim();
-      const email = document.getElementById('email').value.trim();
-
-      try {
-        const { data, error } = await supabaseClient
-          .from('usuarios')
-          .insert([{ nombre, email }]);
-
-        if (error) throw error;
-        registroForm.reset();
-
-      } catch (error) {
-        console.error('Error al insertar usuario:', error.message);
-        alert('No se pudo guardar el usuario.');
-      } finally {
-        btnSubmit.disabled = false;
-        btnSubmit.innerHTML = originalBtnContent;
-        // Quita la clase hover por si quedó trabada al cambiar el estado del DOM
-        document.body.classList.remove('cursor-hover');
-      }
-    });
-
-    // ==========================================================================
-    // TIEMPO REAL
-    // ==========================================================================
-    function activarTiempoReal() {
-      supabaseClient
-        .channel('cambios-usuarios')
-        .on(
-          'postgres_changes', 
-          { event: '*', schema: 'public', table: 'usuarios' }, 
-          (payload) => {
-            obtenerUsuarios(); 
-          }
-        )
-        .subscribe();
-    }
-
-    // ==========================================================================
-    // CONTROL DEL CURSOR CUSTOM
-    // ==========================================================================
-    function inicializarCursorCustom() {
-      if (!cursorDot || !cursorRing) return;
-
-      window.addEventListener('mousemove', (e) => {
-        // Movimiento inmediato para el punto central
-        cursorDot.style.left = `${e.clientX}px`;
-        cursorDot.style.top = `${e.clientY}px`;
+    <div>
+      <form id="cita-form">
+        <div class="form-group">
+          <label for="nombre">Nombre Completo</label>
+          <input type="text" id="nombre" placeholder="Ej. Marcos Pérez" required>
+        </div>
         
-        // El anillo lo sigue con el delay que le da la transición CSS
-        cursorRing.style.left = `${e.clientX}px`;
-        cursorRing.style.top = `${e.clientY}px`;
+        <div class="form-group">
+          <label for="email">Correo Electrónico</label>
+          <input type="email" id="email" placeholder="ejemplo@correo.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="servicio">Servicio de Interés</label>
+          <select id="servicio">
+            <option value="alta-joyeria">Colección Alta Joyería</option>
+            <option value="compromiso">Alianzas y Compromiso</option>
+            <option value="restauracion">Restauración y Mantenimiento</option>
+          </select>
+        </div>
+
+        <button type="submit" class="form-wa-btn">Confirmar y Registrarse</button>
+      </form>
+
+      <div class="form-success">
+        <div class="fs-icon">✨</div>
+        <h4>Registro Exitoso</h4>
+        <p>Tu información se ha guardado correctamente en nuestra base de datos. Nos comunicaremos con vos a la brevedad para coordinar los detalles.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <div class="footer-logo">Legrand</div>
+    <p class="footer-tagline">Creando legados de brillo eterno y distinción absoluta desde 1984.</p>
+  </div>
+  <div>
+    <h5 class="footer-col-title">Colecciones</h5>
+    <ul class="footer-links">
+      <li><a href="#">Anillos de Compromiso</a></li>
+      <li><a href="#">Gemas Únicas</a></li>
+      <li><a href="#">Línea Platino</a></li>
+    </ul>
+  </div>
+  <div>
+    <h5 class="footer-col-title">La Empresa</h5>
+    <ul class="footer-links">
+      <li><a href="#">Nuestra Historia</a></li>
+      <li><a href="#">Sostenibilidad</a></li>
+      <li><a href="#">Prensa</a></li>
+    </ul>
+  </div>
+  <div>
+    <h5 class="footer-col-title">Soporte</h5>
+    <ul class="footer-links">
+      <li><a href="#">Cuidado de Piezas</a></li>
+      <li><a href="#">Garantía Oficial</a></li>
+      <li><a href="#">Contacto</a></li>
+    </ul>
+  </div>
+</footer>
+
+<div class="footer-bottom">
+  <span class="footer-copy">&copy; 2026 Legrand Joyería. Todos los derechos reservados.</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+  // ==========================================================================
+  // CONFIGURACIÓN DE SUPABASE
+  // ==========================================================================
+  const SUPABASE_URL = "https://tu-id-proyecto.supabase.co"; 
+  const SUPABASE_ANON_KEY = "tu-anon-key-sb_publishable_..."; 
+
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  document.addEventListener("DOMContentLoaded", () => {
+    // Formulario de Inscripción
+    const form = document.getElementById("cita-form");
+    const successMessage = document.querySelector(".form-success");
+
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const nombreVal = document.getElementById("nombre").value.trim();
+        const emailVal = document.getElementById("email").value.trim();
+
+        try {
+          const { data, error } = await supabaseClient
+            .from('usuarios')
+            .insert([{ nombre: nombreVal, email: emailVal }]);
+
+          if (error) throw error;
+
+          form.style.display = "none";
+          if (successMessage) {
+            successMessage.classList.add("visible");
+          }
+
+        } catch (error) {
+          console.error("Error en base de datos Supabase:", error.message);
+          alert("Error de conexión: No se pudo guardar el registro.");
+        }
+      });
+    }
+
+    // ==========================================================================
+    // LÓGICA DEL CURSOR CINEMÁTICO (Inercia Fluida)
+    // ==========================================================================
+    const dot = document.querySelector('.cursor-dot');
+    const ring = document.querySelector('.cursor-ring');
+    
+    // Coordenadas reales del mouse
+    let mouseX = 0, mouseY = 0;
+    // Coordenadas interpoladas (anillo)
+    let ringX = 0, ringY = 0;
+
+    if (dot && ring) {
+      window.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        // El punto interno se actualiza de manera inmediata
+        dot.style.left = `${mouseX}px`;
+        dot.style.top = `${mouseY}px`;
       });
 
-      // Detectar hovers en elementos interactivos de forma dinámica
+      // Bucle de animación nativo (60fps con cálculo de suavizado)
+      function renderCursor() {
+        // Ajustá el multiplicador (0.12) para variar la velocidad de seguimiento de la inercia
+        ringX += (mouseX - ringX) * 0.12;
+        ringY += (mouseY - ringY) * 0.12;
+
+        ring.style.left = `${ringX}px`;
+        ring.style.top = `${ringY}px`;
+
+        requestAnimationFrame(renderCursor);
+      }
+      requestAnimationFrame(renderCursor);
+
+      // Eventos dinámicos globales para interactividad (Hove)
       document.addEventListener('mouseover', (e) => {
-        if (e.target.closest('button, input, a, select, tr, th')) {
+        if (e.target.closest('button, input, a, select, option, label, .cart-btn')) {
           document.body.classList.add('cursor-hover');
         }
       });
 
       document.addEventListener('mouseout', (e) => {
-        if (e.target.closest('button, input, a, select, tr, th')) {
+        if (e.target.closest('button, input, a, select, option, label, .cart-btn')) {
           document.body.classList.remove('cursor-hover');
         }
       });
     }
-
-    // ==========================================================================
-    // FUNCIONES AUXILIARES
-    // ==========================================================================
-    function mostrarLoading(isLoading) {
-      if (isLoading) {
-        loadingState.classList.remove('hidden');
-      } else {
-        loadingState.classList.add('hidden');
-      }
-    }
-
-    function escapeHTML(str) {
-      return str.replace(/[&<>'"]/g, 
-        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
-      );
-    }
-
-    // Inicialización global
-    document.addEventListener('DOMContentLoaded', () => {
-      obtenerUsuarios();   
-      activarTiempoReal(); 
-      inicializarCursorCustom();
-    });
-  </script>
+  });
+</script>
 </body>
 </html>
